@@ -1,0 +1,24 @@
+# Project name
+project_name = "Web notes assistant"
+# When the project get started
+start_date = "2024-10-01"
+# Your team
+team = [
+    { name="Alicja", base_calendar="calendar_pl.toml", focus_factor=0.5, holidays="", other_duties=""},
+]
+
+tasks = [
+    {id="T1", name="Getting into requirements", estimate=1},
+    {id="T2", name="Design DB schema", estimate=1.5, after="T1"},
+    {id="T3", name="Implement DB access layer", estimate=4, after="T2"},
+    {id="T4", name="Implement Web application", estimate=7, after="T3"},
+    {id="T5", name="Design CSS", estimate=3.5, after="T4"},
+]
+
+assignments = [
+    {task="T1", owner="Alicja"},
+    {task="T2", owner="Alicja"},
+    {task="T3", owner="Alicja"},
+    {task="T4", owner="Alicja"},
+    {task="T5", owner="Alicja", focus_factor=0.8},
+]

@@ -1,0 +1,5 @@
+[backend.plantuml]
+use_api=true
+api_url="http://www.plantuml.com/plantuml/png/"
+local_cmd="java -jar plantuml-1.2024.7.jar -o <OUTPUT_DIR> <INPUT>"
+
