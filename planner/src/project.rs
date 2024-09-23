@@ -18,7 +18,20 @@ pub struct Task {
     pub id: String,
     pub name: String,
     pub estimate: f64,
-    pub after: Option<String>, // This is an optional field
+    #[serde(default, deserialize_with="parse_vec_str")]
+    pub after: Vec<String>, // This is an optional field
+}
+
+pub fn parse_vec_str<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s: String = String::deserialize(deserializer)?;
+    let mut ret = Vec::new();
+    for s in s.split(',').filter(|s| !s.trim().is_empty()) {
+        ret.push(s.trim().into());
+    }
+    Ok(ret)
 }
 
 #[derive(Debug, Deserialize)]
@@ -58,4 +71,16 @@ mod tests {
         let proj = proj.unwrap();
         assert_eq!(proj.project_name, "Web notes assistant");
     }
+
+  #[test]
+    fn complex_project_test() {
+        let proj = ProjectConfig::from(include_str!("../../examples/complex_project.toml"));
+        if let Err(e) = &proj {
+            println!("Error: {e}");
+        }
+        assert!(proj.is_ok());
+        let proj = proj.unwrap();
+        assert_eq!(proj.project_name, "Game development");
+    }
+
 }

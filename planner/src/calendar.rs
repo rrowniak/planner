@@ -30,7 +30,7 @@ where
     let s: String = String::deserialize(deserializer)?;
     let mut ret = Vec::new();
     for d in s.split(',').filter(|s| !s.trim().is_empty()) {
-        if let Some(range) = s.split_once(':') {
+        if let Some(range) = d.split_once(':') {
             let start_date =
                 NaiveDate::parse_from_str(range.0, DATE_FMT).map_err(serde::de::Error::custom)?;
             let end_date =
@@ -56,6 +56,8 @@ where
 pub enum DayInfo {
     NonWorking,
     NonWorkingPubHoliday,
+    WorkerHolidays,
+    WorkerOtherDuties,
     WorkingDay(u32),
 }
 

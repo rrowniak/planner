@@ -4,7 +4,7 @@ project_name = "Web notes assistant"
 start_date = "2024-10-01"
 # Your team
 team = [
-    { name="Alicja", base_calendar="calendar_pl.toml", focus_factor=0.5, holidays="", other_duties=""},
+    { name="Alicja", base_calendar="calendar_pl.toml", focus_factor=0.5, holidays="2024-10-7:2024-10-8, 2024-10-25", other_duties=""},
 ]
 
 tasks = [

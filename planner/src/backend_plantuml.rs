@@ -35,12 +35,24 @@ fn generate_plantuml_script(
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut script = String::new();
     script += "@startgantt\n";
+    // Closed days
     for cd in &data.closed_days {
         let cd = format!("{cd} are closed\n").to_lowercase();
         script += &cd;
     }
-    // script += "saturday are closed\nsunday are closed\n";
+    // Workers absence days
+    for (work, off) in &data.workers_absence {
+        for d in off {
+            script += &format!("{{{work}}} is off on {d}\n");
+        }
+    }
+    // Public holidays (for all callendars)
+    for ph in &data.public_holidays {
+        script += &format!("{ph} is colored in salmon\n");
+    }
+    // Project start date
     script += &format!("\nProject starts {}\n\n", data.project_starts);
+    // Task starting and finishing dates
     for t in &data.tasks {
         let name = &t.name;
         let id = &t.id;
@@ -49,14 +61,19 @@ fn generate_plantuml_script(
             "[{name}] as [{id}] on {{{assignee}}} starts {}\n",
             t.start_on
         );
+        let end = t.end_on;
+        script += &format!("[{id}] ends at {end}\n");
+        // paused days
+        for p in t.pause_days.iter() {
+            script += &format!("[{id}] pauses on {p}\n");
+        }
     }
     script += "\n";
+    // Dependencies
     for t in &data.tasks {
-        let end = t.end_on;
         let id = &t.id;
-        if let Some(after) = &t.after {
-            script += &format!("[{id}] starts at [{after}]'s end\n");
-            script += &format!("[{id}] ends at {end}\n")
+        for after in &t.after {
+            script += &format!("[{after}] -> [{id}]\n")
         }
     }
 
