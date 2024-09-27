@@ -20,7 +20,7 @@ pub fn build_chart(
     out_dir: &std::path::Path,
     proj_name: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let script = generate_plantuml_script(data)?;
+    let script = generate_plantuml_script(cfg, data)?;
     if api_server {
     } else {
         let mut script_filename = std::path::PathBuf::from(out_dir);
@@ -31,6 +31,7 @@ pub fn build_chart(
 }
 
 fn generate_plantuml_script(
+    cfg: &cfg::Config,
     data: &gantt_builder::GanttData,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut script = String::new();
@@ -46,6 +47,8 @@ fn generate_plantuml_script(
             script += &format!("{{{work}}} is off on {d}\n");
         }
     }
+    // hide resources footbox, we will implement a custom one
+    script += "hide ressources footbox\n";
     // Public holidays (for all callendars)
     for ph in &data.public_holidays {
         script += &format!("{ph} is colored in salmon\n");
@@ -76,6 +79,62 @@ fn generate_plantuml_script(
             script += &format!("[{after}] -> [{id}]\n")
         }
     }
+
+    // resources footbox
+    for (worker, days) in &data.resource_allocation.0 {
+        script += &format!("-- {worker} --\n");
+        let mut i = 0;
+        let mut prev = String::new();
+        for (d, dtype) in days {
+            let task_name = format!("{worker}_{i}");
+            script += &format!("[.] as [{task_name}] starts {d} and requires 1 days\n");
+            use gantt_builder::WorkerDay::*;
+            let c = match dtype {
+                PubHolidays => &cfg.backend.colors.worker_pub_holidays,
+                Holidays => &cfg.backend.colors.worker_holidays,
+                OtherDuties => &cfg.backend.colors.worker_other_duties,
+                Overloaded => &cfg.backend.colors.worker_overloaded,
+                Underloaded => &cfg.backend.colors.worker_underloaded,
+                Fine => &cfg.backend.colors.worker_fine,
+                Unassigned => &cfg.backend.colors.worker_unassigned,
+            };
+            script += &format!("[{task_name}] is colored in {c}\n");
+            if i > 0 {
+                script += &format!("[{task_name}] displays on same row as [{prev}]\n");
+            }
+            prev = task_name.clone();
+            i += 1;
+        }
+    }
+    // legend
+    script += "\nlegend\n";
+    script += "Resource allocation legend:\n";
+    script += "|= Color |= Day Type |\n";
+    // |<#gray> | Planned |
+    script += &format!(
+        "|<#{}>| PubHolidays |\n",
+        &cfg.backend.colors.worker_pub_holidays,
+    );
+    script += &format!("|<#{}>| Holidays |\n", &cfg.backend.colors.worker_holidays);
+    script += &format!(
+        "|<#{}>| OtherDuties |\n",
+        &cfg.backend.colors.worker_other_duties,
+    );
+    script += &format!(
+        "|<#{}>| Overloaded |\n",
+        &cfg.backend.colors.worker_overloaded
+    );
+    script += &format!(
+        "|<#{}>| Underloaded |\n",
+        &cfg.backend.colors.worker_underloaded,
+    );
+    script += &format!("|<#{}>| Fine |\n", &cfg.backend.colors.worker_fine);
+    script += &format!(
+        "|<#{}>| Unassigned |\n",
+        &cfg.backend.colors.worker_unassigned
+    );
+
+    script += "end legend\n";
 
     script += "@endgantt\n";
     Ok(script)

@@ -1,7 +1,7 @@
 use crate::{calendar, cfg, project};
 use chrono::{Days, NaiveDate, Weekday};
 use std::cell::Cell;
-use std::collections::{HashMap, VecDeque};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 
 #[derive(Debug, Clone)]
 struct ProcessError(String);
@@ -26,13 +26,47 @@ pub struct Task {
     pub duration_hours: u32,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum WorkerDay {
+    PubHolidays,
+    Holidays,
+    OtherDuties,
+    Overloaded,
+    Underloaded,
+    Fine,
+    Unassigned,
+}
+
+#[derive(Debug)]
+pub struct ResourceAllocation(pub HashMap<String, BTreeMap<NaiveDate, WorkerDay>>);
+
+impl ResourceAllocation {
+    fn new() -> ResourceAllocation {
+        ResourceAllocation(HashMap::new())
+    }
+
+    fn add(&mut self, worker: &str, date: NaiveDate, day: WorkerDay) {
+        let worker = worker.into();
+        let m = self.0.entry(worker).or_insert(BTreeMap::new());
+        if let Some(v) = m.get_mut(&date) {
+            if *v == WorkerDay::Fine {
+                *v = WorkerDay::Overloaded;
+            }
+        } else {
+            m.insert(date, day);
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct GanttData {
     pub tasks: Vec<Task>,
     pub project_starts: NaiveDate,
     pub closed_days: Vec<Weekday>,
+    /// <worker_name, [absences]>
     pub workers_absence: HashMap<String, Vec<NaiveDate>>,
     pub public_holidays: Vec<NaiveDate>,
+    pub resource_allocation: ResourceAllocation,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -111,7 +145,6 @@ fn build_task_graph(tasks: &[project::Task]) -> Graph {
         });
     }
     // update dependencies
-    // for (i, node) in graph.iter().enumerate() {
     for i in 0..graph.len() {
         let task = &tasks[graph[i].task_id.0];
         for after in &task.after {
@@ -160,20 +193,18 @@ pub fn process(
     let mut tasks = Vec::new();
     let mut workers_absence = HashMap::<String, Vec<NaiveDate>>::new();
     let mut public_holidays = Vec::new();
+    let mut resource_allocation = ResourceAllocation::new();
     let project_begin = proj.start_date;
-    // let mut cumulative_days = 0.0;
-    // for task in &proj.tasks {
-    println!("Graph: {graph:?}");
+    let mut project_end = project_begin;
+    // println!("Graph: {graph:?}");
     while let Some(graph_node_id) = task_queue.pop_front() {
         let graph_node = graph.get_node(graph_node_id).unwrap();
         let task = graph_node.task_id.get(&proj.tasks).unwrap();
         let id = task.id.clone();
         let name = task.name.clone();
-        println!("Processing: {name}, after: {:?}", task.after);
-        // check if we have a cycle
+        // println!("Processing: {name}, after: {:?}", task.after);
         if graph_node.cumulative_days.get().is_some() {
             continue;
-            // this node has already been calculated so we should not
         }
         // ready for processing?
         if !graph.calc_start_time(graph_node) {
@@ -211,12 +242,18 @@ pub fn process(
         let mut end_on = start_on;
         for d in start_on.iter_days() {
             cumulative_days += 1.0;
-            let hrs = match get_day_info(&d, worker_cal, worker) {
+            let day_info = get_day_info(&d, worker_cal, worker);
+            let hrs = match day_info {
                 calendar::DayInfo::WorkerHolidays | calendar::DayInfo::WorkerOtherDuties => {
                     workers_absence
                         .entry(worker_name.clone())
                         .or_insert(vec![])
                         .push(d);
+                    if day_info == calendar::DayInfo::WorkerHolidays {
+                        resource_allocation.add(&worker_name, d, WorkerDay::Holidays);
+                    } else {
+                        resource_allocation.add(&worker_name, d, WorkerDay::OtherDuties);
+                    }
                     pause_days.push(d);
                     continue;
                 }
@@ -227,11 +264,13 @@ pub fn process(
                         .entry(worker_name.clone())
                         .or_insert(vec![])
                         .push(d);
+                    resource_allocation.add(&worker_name, d, WorkerDay::PubHolidays);
                     pause_days.push(d);
                     continue;
                 }
                 _ => {
                     pause_days.push(d);
+                    resource_allocation.add(&worker_name, d, WorkerDay::PubHolidays);
                     continue;
                 }
             };
@@ -243,6 +282,7 @@ pub fn process(
             };
             let hrs = hrs as f64 * focus_factor;
             hours_to_burn -= hrs;
+            resource_allocation.add(&worker_name, d, WorkerDay::Fine);
             if hours_to_burn <= 0.01 {
                 // we have to subtract (hours_to_burn is negative) remaining day
                 // as we progressed too far
@@ -252,9 +292,9 @@ pub fn process(
                 break;
             }
         }
-        // let end_on = start_on + Days::new(t.estimate as u64);
-        // cumulative_days +=task.estimate;
-        // now = end_on;
+        if end_on > project_end {
+            project_end = end_on;
+        }
         let duration_hours = (24.0 * task.estimate) as u32;
         tasks.push(Task {
             id,
@@ -269,6 +309,16 @@ pub fn process(
         // we have to update new cumulative_days
         graph_node.cumulative_days.set(Some(cumulative_days));
     }
+    // fill resource allocation unassigned
+    for (_, days) in resource_allocation.0.iter_mut() {
+        for d in project_begin.iter_days() {
+            if d > project_end {
+                break;
+            }
+            days.entry(d).or_insert(WorkerDay::Unassigned);
+        }
+    }
+
     let project_starts = proj.start_date;
     let closed_days = calendars.values().next().unwrap().closed_days.clone();
     Ok(GanttData {
@@ -277,6 +327,7 @@ pub fn process(
         closed_days,
         workers_absence,
         public_holidays,
+        resource_allocation,
     })
 }
 

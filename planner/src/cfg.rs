@@ -7,10 +7,22 @@ pub struct PlantUMLConfig {
     pub local_cmd: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct Colors {
+    pub worker_pub_holidays: String,
+    pub worker_holidays: String,
+    pub worker_other_duties: String,
+    pub worker_overloaded: String,
+    pub worker_underloaded: String,
+    pub worker_fine: String,
+    pub worker_unassigned: String,
+}
+
 // Define a struct for backend settings, which contains plantuml configuration
 #[derive(Debug, Deserialize)]
 pub struct BackendConfig {
     pub plantuml: PlantUMLConfig,
+    pub colors: Colors,
 }
 
 // Define the top-level configuration struct

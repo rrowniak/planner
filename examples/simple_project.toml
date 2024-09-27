@@ -1,13 +1,20 @@
 # Project name
 project_name = "Web notes assistant"
-# When the project get started
+# Project start date, calculations start from here
 start_date = "2024-10-01"
 # Your team
 team = [
+    # `base_calendar` - calendar definition for this team member (public holidays, weekend days, working hours), you can define different calendars for different employees
+    # `focus_factor` - see README.md. In short, an efficiency parameter that bridges the gap between ideal estimations and real word conditions. 0.5 means that 8 hours * 0.5 = 4 hours can be efficiently spent on assigned task.
+    # `holidays` - all planned holidays
+    # `other_duties` - like other projects, support duties, delegations, and so on
     { name="Alicja", base_calendar="calendar_pl.toml", focus_factor=0.5, holidays="2024-10-7:2024-10-8, 2024-10-25", other_duties=""},
 ]
 
+# list of tasks
 tasks = [
+    # `estimate` - ideal estimate in working days assuming no distractive conditions like meetings, etc.
+    # `after` - dependencies on other tasks, can be a list such as "T1,T2", etc
     {id="T1", name="Getting into requirements", estimate=1},
     {id="T2", name="Design DB schema", estimate=1.5, after="T1"},
     {id="T3", name="Implement DB access layer", estimate=4, after="T2"},
@@ -15,10 +22,12 @@ tasks = [
     {id="T5", name="Design CSS", estimate=3.5, after="T4"},
 ]
 
+# tasks assigned to team members
 assignments = [
     {task="T1", owner="Alicja"},
     {task="T2", owner="Alicja"},
     {task="T3", owner="Alicja"},
     {task="T4", owner="Alicja"},
+    # `focus_factor` - redefinition of the original focus factor for this particular tasks. Worker can be e.g. exceptionally proficient in this kind of work so we increased the focus factor
     {task="T5", owner="Alicja", focus_factor=0.8},
 ]

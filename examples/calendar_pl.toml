@@ -1,7 +1,11 @@
+# closed days - usually weekends
 closed_days = ["saturday", "sunday"]
 
+# how many working hours should be assumed per day
 working_hrs_in_day = 8
 
+# public holidays, the list should cover project timelines
+# you should have a safety margin such as a few months ahead
 public_holidays = [
     # 2024
     {date="2024-01-01", name="New Year's Day"},

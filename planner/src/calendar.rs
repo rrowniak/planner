@@ -53,6 +53,7 @@ where
     Ok(NaiveDate::parse_from_str(&s, DATE_FMT).map_err(serde::de::Error::custom)?)
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum DayInfo {
     NonWorking,
     NonWorkingPubHoliday,

@@ -15,7 +15,7 @@ tasks = [
     {id="T3", name="Assets and arts", estimate=15},
     {id="T4", name="QA", estimate=7, after="T2,T3"},
     {id="T5", name="Bug fixing", estimate=5, after="T2,T3"},
-    {id="T6", name="Beta tests", estimate=4, after="T5"},
+    {id="T6", name="Beta tests", estimate=5, after="T5"},
 ]
 
 assignments = [

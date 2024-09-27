@@ -1,5 +1,14 @@
+[backend.colors]
+# according to https://www.w3schools.com/colors/colors_names.asp
+worker_pub_holidays="salmon"
+worker_holidays="purple"
+worker_other_duties="cyan"
+worker_overloaded="black"
+worker_underloaded="gray"
+worker_fine="lightgreen"
+worker_unassigned="magenta"
+
 [backend.plantuml]
 use_api=true
 api_url="http://www.plantuml.com/plantuml/png/"
 local_cmd="java -jar plantuml-1.2024.7.jar -o <OUTPUT_DIR> <INPUT>"
-
