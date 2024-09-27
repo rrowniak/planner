@@ -5,16 +5,25 @@ One of the most challenging aspects of project management is accurately translat
 
 ![Simple example](./examples/simple_project.png)
 
+As you can see, the project actually finishes at the end of November, far beyond our initial estimate. Mistakes like this are surprisingly common and often lead to confusion, misalignment, and unnecessary tension within teams.
+
+The planner takes a ![project definition](./examples/simple_project.toml) as input, with a self-explanatory format. In this definition, we specify the team members involved, the tasks with their respective dependencies, and the task assignments. Based on this information, the planner performs all the necessary calculations and generates a Gantt chart, accurately reflecting the timeline.
+
+Here you can see a bit more complex scenario defined ![here](./examples/complex_project.toml):
+
+![Complex example](./examples/complex_project.png)
+
 ## Dependencies
 Project is written in Rust, you need to have a Rust development environment.
 ### Plantuml
-The planner relies on plantuml library, an opensource tool for drawing different kind of diagram, including Gantt charts.
+The planner relies on the plantuml library, an opensource tool for drawing different kind of diagram, including Gantt charts.
 Install plantuml first:
-- install JRE, e.g. on ubuntu:
+- install JRE, e.g. on Ubuntu:
 ```
 sudo apt install default-jre
 ```
-- download plantuml jar library
+- download th plantuml jar library
+
 ## Build and install
 Build the project
 ```
