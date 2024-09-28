@@ -39,3 +39,8 @@ assignments = [
     {task="T5", owner="Mirek", focus_factor=0.8},
     {task="T6", owner="Adam"},
 ]
+
+time_markers = [
+    {time="2024-12-09", label="Game exhibition"},
+    {time="2024-12-16:2024-12-25", label="Critical path"}
+]

@@ -41,6 +41,13 @@ pub struct Assignment {
     pub focus_factor: Option<f64>, // Optional field for overriding focus factor
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct TimeMarker {
+    #[serde(deserialize_with="parse_multidate_entry")]
+    pub time: Vec<DateObj>,
+    pub label: String,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct ProjectConfig {
     pub project_name: String,
@@ -49,6 +56,7 @@ pub struct ProjectConfig {
     pub team: Vec<TeamMember>,
     pub tasks: Vec<Task>,
     pub assignments: Vec<Assignment>,
+    pub time_markers: Option<Vec<TimeMarker>>,
 }
 
 impl ProjectConfig {

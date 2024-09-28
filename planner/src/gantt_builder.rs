@@ -68,6 +68,7 @@ pub struct GanttData {
     pub workers_absence: HashMap<String, Vec<NaiveDate>>,
     pub public_holidays: Vec<NaiveDate>,
     pub resource_allocation: ResourceAllocation,
+    pub time_markers: Vec<project::TimeMarker>,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -322,6 +323,10 @@ pub fn process(
 
     let project_starts = proj.start_date;
     let closed_days = calendars.values().next().unwrap().closed_days.clone();
+    let time_markers = match proj.time_markers.clone() {
+        Some(v) => v,
+        None => Vec::new(),
+    };
     Ok(GanttData {
         title: proj.project_name.clone(),
         tasks,
@@ -330,6 +335,7 @@ pub fn process(
         workers_absence,
         public_holidays,
         resource_allocation,
+        time_markers,
     })
 }
 

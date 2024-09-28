@@ -1,3 +1,4 @@
+use crate::calendar;
 use crate::cfg;
 use crate::gantt_builder;
 use std::process::{Command, Output};
@@ -105,6 +106,27 @@ fn generate_plantuml_script(
             }
             prev = task_name.clone();
             i += 1;
+        }
+    }
+    // time markers
+    for tm in &data.time_markers {
+        for time in &tm.time {
+            let from;
+            let to;
+            match time {
+                calendar::DateObj::Date(d) => {
+                    from = d;
+                    to = d
+                }
+                calendar::DateObj::Range(f, t) => {
+                    from = f;
+                    to = t;
+                }
+            }
+            let label = &tm.label;
+            script += &format!("{from} to {to} are named [{label}]\n");
+            let c = &cfg.backend.colors.time_markers;
+            script += &format!("{from} to {to} are colored in {c}\n");
         }
     }
     // legend

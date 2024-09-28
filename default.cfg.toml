@@ -8,6 +8,8 @@ worker_underloaded="lightgray"
 worker_fine="lightgreen"
 worker_unassigned="gray"
 
+time_markers="navajowhite"
+
 [backend.plantuml]
 use_api=true
 api_url="http://www.plantuml.com/plantuml/png/"

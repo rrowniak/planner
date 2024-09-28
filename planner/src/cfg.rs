@@ -16,6 +16,8 @@ pub struct Colors {
     pub worker_underloaded: String,
     pub worker_fine: String,
     pub worker_unassigned: String,
+
+    pub time_markers: String,
 }
 
 // Define a struct for backend settings, which contains plantuml configuration
