@@ -1,27 +1,40 @@
 # Project name
 project_name = "Game development"
-# When the project get started
+# When the project gets started
 start_date = "2024-10-01"
 # Your team
 team = [
-    { name="Alicja", base_calendar="calendar_pl.toml", focus_factor=0.5, holidays="2024-10-7:2024-10-8, 2024-10-25", other_duties=""},
-    { name="Mirek", base_calendar="calendar_pl.toml", focus_factor=0.7, holidays="2024-12-27", other_duties="2024-09-30:2024-10-05"},
+    { name="Alicja", base_calendar="calendar_pl.toml", focus_factor=0.5, holidays="2024-10-7:2024-10-8, 2024-10-25", other_duties="2024-11-05,2024-11-06"},
+    { name="Mirek", base_calendar="calendar_pl.toml", focus_factor=0.7, holidays="2024-11-04:2024-11-08,2024-12-27", other_duties="2024-09-30:2024-10-05"},
     { name="Adam", base_calendar="calendar_pl.toml", focus_factor=0.6, holidays="2024-11-11:2024-11-17", other_duties=""},
 ]
 
 tasks = [
-    {id="T1", name="Game engine development", estimate=15},
-    {id="T2", name="Game logic development", estimate=10, after="T1"},
-    {id="T3", name="Assets and arts", estimate=15},
-    {id="T4", name="QA", estimate=7, after="T2,T3"},
-    {id="T5", name="Bug fixing", estimate=5, after="T2,T3"},
+    # game development
+    {id="T1.0", name="Game engine retrofit", estimate=6},
+    {id="T1.1", name="Game engine 2d effects", estimate=4, after="T1.0"},
+    {id="T1.2", name="Game engine UI", estimate=5, after="T1.1"},
+    {id="T2.1", name="Game logic development", estimate=6, after="T1.2"},
+    {id="T2.2", name="Game logic AI", estimate=4, after="T2.1"},
+    # Assets and art
+    {id="T3.1", name="Assets landscape", estimate=5},
+    {id="T3.2", name="Assets units", estimate=5, after="T3.1"},
+    {id="T3.3", name="Assets buildings", estimate=5, after="T3.2"},
+    # QA work
+    {id="T4", name="QA", estimate=7, after="T2.2,T3.3"},
+    {id="T5", name="Bug fixing", estimate=5, after="T2.2,T3.3"},
     {id="T6", name="Beta tests", estimate=5, after="T5"},
 ]
 
 assignments = [
-    {task="T1", owner="Mirek"},
-    {task="T2", owner="Mirek"},
-    {task="T3", owner="Alicja"},
+    {task="T1.0", owner="Mirek"},
+    {task="T1.1", owner="Mirek"},
+    {task="T1.2", owner="Mirek"},
+    {task="T2.1", owner="Mirek"},
+    {task="T2.2", owner="Mirek"},
+    {task="T3.1", owner="Alicja"},
+    {task="T3.2", owner="Alicja"},
+    {task="T3.3", owner="Alicja"},
     {task="T4", owner="Adam"},
     {task="T5", owner="Mirek", focus_factor=0.8},
     {task="T6", owner="Adam"},

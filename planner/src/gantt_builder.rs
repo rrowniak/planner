@@ -60,6 +60,7 @@ impl ResourceAllocation {
 
 #[derive(Debug)]
 pub struct GanttData {
+    pub title: String,
     pub tasks: Vec<Task>,
     pub project_starts: NaiveDate,
     pub closed_days: Vec<Weekday>,
@@ -322,6 +323,7 @@ pub fn process(
     let project_starts = proj.start_date;
     let closed_days = calendars.values().next().unwrap().closed_days.clone();
     Ok(GanttData {
+        title: proj.project_name.clone(),
         tasks,
         project_starts,
         closed_days,

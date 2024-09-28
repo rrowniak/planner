@@ -1,12 +1,12 @@
 [backend.colors]
 # according to https://www.w3schools.com/colors/colors_names.asp
 worker_pub_holidays="salmon"
-worker_holidays="purple"
+worker_holidays="tomato"
 worker_other_duties="cyan"
 worker_overloaded="black"
-worker_underloaded="gray"
+worker_underloaded="lightgray"
 worker_fine="lightgreen"
-worker_unassigned="magenta"
+worker_unassigned="gray"
 
 [backend.plantuml]
 use_api=true

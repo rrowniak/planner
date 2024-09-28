@@ -36,6 +36,7 @@ fn generate_plantuml_script(
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut script = String::new();
     script += "@startgantt\n";
+    script += &format!("title {}\n", data.title);
     // Closed days
     for cd in &data.closed_days {
         let cd = format!("{cd} are closed\n").to_lowercase();

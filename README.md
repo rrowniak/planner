@@ -24,6 +24,35 @@ This parameter is crucial for creating more realistic timelines and better manag
 
 It's important to note that the focus factor should be experimentally determined, as it may vary significantly from employee to employee based on their working style, role, and the specific demands of the project. You can start from values like 0.6 or 0.7 and adjust them according to the feedback.
 
+## Usage
+The planner is a command line tool.
+
+Usage:
+```
+Draws a Gantt chart based on the input project
+
+Usage: planner [OPTIONS] <PROJECT_TOML>
+
+Arguments:
+  <PROJECT_TOML>  
+
+Options:
+  -a, --api-server    
+  -c, --cfg <CONFIG>  
+  -h, --help          Print help
+  -V, --version       Print version
+
+
+```
+
+For example, if you run the following command:
+```
+$ planner ./examples/simple_project.toml
+```
+the planner will generate:
+- `./examples/simple_project.txt` - plantuml script
+- `./examples/simple_project.png` - Gantt chart
+
 ## Dependencies
 Project is written in Rust, you need to have a Rust development environment.
 ### Plantuml
