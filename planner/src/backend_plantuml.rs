@@ -85,9 +85,8 @@ fn generate_plantuml_script(
     // resources footbox
     for (worker, days) in &data.resource_allocation.0 {
         script += &format!("-- {worker} --\n");
-        let mut i = 0;
         let mut prev = String::new();
-        for (d, dtype) in days {
+        for (i, (d, dtype)) in days.iter().enumerate() {
             let task_name = format!("{worker}_{i}");
             script += &format!("[.] as [{task_name}] starts {d} and requires 1 days\n");
             use gantt_builder::WorkerDay::*;
@@ -105,7 +104,6 @@ fn generate_plantuml_script(
                 script += &format!("[{task_name}] displays on same row as [{prev}]\n");
             }
             prev = task_name.clone();
-            i += 1;
         }
     }
     // time markers

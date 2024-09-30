@@ -1,6 +1,7 @@
 use crate::calendar::{parse_date_entry, parse_multidate_entry, DateObj};
 use chrono::NaiveDate;
-use serde::Deserialize;
+use toml;
+use serde::{self, Deserialize};
 
 #[derive(Debug, Deserialize)]
 pub struct TeamMember {
@@ -61,7 +62,7 @@ pub struct ProjectConfig {
 
 impl ProjectConfig {
     pub fn from(content: &str) -> Result<ProjectConfig, Box<dyn std::error::Error>> {
-        let config: ProjectConfig = toml::from_str(&content)?;
+        let config: ProjectConfig = toml::from_str(content)?;
         Ok(config)
     }
 }

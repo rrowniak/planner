@@ -1,5 +1,6 @@
 use chrono::{Datelike, NaiveDate, Weekday};
-use serde::Deserialize;
+use serde::{self, Deserialize};
+use toml;
 
 const DATE_FMT: &str = "%Y-%m-%d";
 
@@ -38,7 +39,7 @@ where
             ret.push(DateObj::Range(start_date, end_date));
         } else {
             ret.push(DateObj::Date(
-                NaiveDate::parse_from_str(&d, DATE_FMT).map_err(serde::de::Error::custom)?,
+                NaiveDate::parse_from_str(d, DATE_FMT).map_err(serde::de::Error::custom)?,
             ));
         }
     }
@@ -50,7 +51,7 @@ where
     D: serde::Deserializer<'de>,
 {
     let s: String = String::deserialize(deserializer)?;
-    Ok(NaiveDate::parse_from_str(&s, DATE_FMT).map_err(serde::de::Error::custom)?)
+    NaiveDate::parse_from_str(&s, DATE_FMT).map_err(serde::de::Error::custom)
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -64,7 +65,7 @@ pub enum DayInfo {
 
 impl BusinessDaysCalendar {
     pub fn from(contents: &str) -> Result<BusinessDaysCalendar, Box<dyn std::error::Error>> {
-        let cal: Self = toml::from_str(&contents)?;
+        let cal: Self = toml::from_str(contents)?;
         Ok(cal)
     }
 

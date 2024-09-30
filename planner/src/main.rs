@@ -19,7 +19,7 @@ struct Args {
 
 fn do_the_calc(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
     let cfg = if let Some(config_file) = &args.config_file {
-        cfg::Config::from(&fs::read_to_string(&config_file)?)?
+        cfg::Config::from(&fs::read_to_string(config_file)?)?
     } else {
         cfg::Config::from(include_str!("../../default.cfg.toml"))?
     };

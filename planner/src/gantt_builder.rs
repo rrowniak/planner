@@ -47,7 +47,7 @@ impl ResourceAllocation {
 
     fn add(&mut self, worker: &str, date: NaiveDate, day: WorkerDay) {
         let worker = worker.into();
-        let m = self.0.entry(worker).or_insert(BTreeMap::new());
+        let m = self.0.entry(worker).or_default();
         if let Some(v) = m.get_mut(&date) {
             if *v == WorkerDay::Fine {
                 *v = WorkerDay::Overloaded;
@@ -249,7 +249,7 @@ pub fn process(
                 calendar::DayInfo::WorkerHolidays | calendar::DayInfo::WorkerOtherDuties => {
                     workers_absence
                         .entry(worker_name.clone())
-                        .or_insert(vec![])
+                        .or_default()
                         .push(d);
                     if day_info == calendar::DayInfo::WorkerHolidays {
                         resource_allocation.add(&worker_name, d, WorkerDay::Holidays);
@@ -264,7 +264,7 @@ pub fn process(
                     public_holidays.push(d);
                     workers_absence
                         .entry(worker_name.clone())
-                        .or_insert(vec![])
+                        .or_default()
                         .push(d);
                     resource_allocation.add(&worker_name, d, WorkerDay::PubHolidays);
                     pause_days.push(d);
@@ -323,10 +323,7 @@ pub fn process(
 
     let project_starts = proj.start_date;
     let closed_days = calendars.values().next().unwrap().closed_days.clone();
-    let time_markers = match proj.time_markers.clone() {
-        Some(v) => v,
-        None => Vec::new(),
-    };
+    let time_markers = proj.time_markers.clone().unwrap_or_default();
     Ok(GanttData {
         title: proj.project_name.clone(),
         tasks,

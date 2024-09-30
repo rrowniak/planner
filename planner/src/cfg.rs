@@ -36,7 +36,7 @@ pub struct Config {
 impl Config {
     pub fn from(contents: &str) -> Result<Config, Box<dyn std::error::Error>> {
         // Parse the TOML contents into the Config struct
-        let config: Config = toml::from_str(&contents)?;
+        let config: Config = toml::from_str(contents)?;
 
         Ok(config)
     }
