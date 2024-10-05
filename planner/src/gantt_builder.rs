@@ -38,22 +38,23 @@ pub enum WorkerDay {
 }
 
 #[derive(Debug)]
-pub struct ResourceAllocation(pub HashMap<String, BTreeMap<NaiveDate, WorkerDay>>);
+pub struct Hours(pub f64);
+
+#[derive(Debug)]
+pub struct ResourceAllocation(pub BTreeMap<String, BTreeMap<NaiveDate, (Hours, WorkerDay)>>);
 
 impl ResourceAllocation {
     fn new() -> ResourceAllocation {
-        ResourceAllocation(HashMap::new())
+        ResourceAllocation(BTreeMap::new())
     }
 
-    fn add(&mut self, worker: &str, date: NaiveDate, day: WorkerDay) {
+    fn add(&mut self, worker: &str, date: NaiveDate, day: WorkerDay, hours: Hours) {
         let worker = worker.into();
         let m = self.0.entry(worker).or_default();
         if let Some(v) = m.get_mut(&date) {
-            if *v == WorkerDay::Fine {
-                *v = WorkerDay::Overloaded;
-            }
+            *v = (Hours(v.0 .0 + hours.0), day)
         } else {
-            m.insert(date, day);
+            m.insert(date, (hours, day));
         }
     }
 }
@@ -184,6 +185,48 @@ fn get_day_info(
     calendar::DayInfo::WorkingDay(hrs)
 }
 
+fn get_working_day_len(
+    day_info: &calendar::DayInfo,
+    d: NaiveDate,
+    worker_name: &String,
+    workers_absence: &mut HashMap<String, Vec<NaiveDate>>,
+    resource_allocation: &mut ResourceAllocation,
+    pause_days: &mut Vec<NaiveDate>,
+    public_holidays: &mut Vec<NaiveDate>,
+) -> Option<u32> {
+    match day_info {
+        calendar::DayInfo::WorkerHolidays | calendar::DayInfo::WorkerOtherDuties => {
+            workers_absence
+                .entry(worker_name.clone())
+                .or_default()
+                .push(d);
+            if *day_info == calendar::DayInfo::WorkerHolidays {
+                resource_allocation.add(&worker_name, d, WorkerDay::Holidays, Hours(0.0));
+            } else {
+                resource_allocation.add(&worker_name, d, WorkerDay::OtherDuties, Hours(0.0));
+            }
+            pause_days.push(d);
+            None
+        }
+        calendar::DayInfo::WorkingDay(h) => Some(*h),
+        calendar::DayInfo::NonWorkingPubHoliday => {
+            public_holidays.push(d);
+            workers_absence
+                .entry(worker_name.clone())
+                .or_default()
+                .push(d);
+            resource_allocation.add(&worker_name, d, WorkerDay::PubHolidays, Hours(0.0));
+            pause_days.push(d);
+            None
+        }
+        _ => {
+            pause_days.push(d);
+            resource_allocation.add(&worker_name, d, WorkerDay::PubHolidays, Hours(0.0));
+            None
+        }
+    }
+}
+
 pub fn process(
     _cfg: &cfg::Config,
     proj: &project::ProjectConfig,
@@ -240,57 +283,76 @@ pub fn process(
         let start_on = project_begin + Days::new(cumulative_days as u64);
         let mut pause_days = Vec::new();
         // calculate task length based on real calendar and focus factor
+        // TODO: replace the hardcoded day length with proper value defined in the cal
         let mut hours_to_burn = task.estimate * 8.0;
         let mut end_on = start_on;
+        // println!("Task: {name}");
         for d in start_on.iter_days() {
-            cumulative_days += 1.0;
             let day_info = get_day_info(&d, worker_cal, worker);
-            let hrs = match day_info {
-                calendar::DayInfo::WorkerHolidays | calendar::DayInfo::WorkerOtherDuties => {
-                    workers_absence
-                        .entry(worker_name.clone())
-                        .or_default()
-                        .push(d);
-                    if day_info == calendar::DayInfo::WorkerHolidays {
-                        resource_allocation.add(&worker_name, d, WorkerDay::Holidays);
-                    } else {
-                        resource_allocation.add(&worker_name, d, WorkerDay::OtherDuties);
-                    }
-                    pause_days.push(d);
-                    continue;
-                }
-                calendar::DayInfo::WorkingDay(h) => h,
-                calendar::DayInfo::NonWorkingPubHoliday => {
-                    public_holidays.push(d);
-                    workers_absence
-                        .entry(worker_name.clone())
-                        .or_default()
-                        .push(d);
-                    resource_allocation.add(&worker_name, d, WorkerDay::PubHolidays);
-                    pause_days.push(d);
-                    continue;
-                }
-                _ => {
-                    pause_days.push(d);
-                    resource_allocation.add(&worker_name, d, WorkerDay::PubHolidays);
-                    continue;
-                }
+            let working_hrs = if let Some(h) = get_working_day_len(
+                &day_info,
+                d,
+                &worker_name,
+                &mut workers_absence,
+                &mut resource_allocation,
+                &mut pause_days,
+                &mut public_holidays,
+            ) {
+                h
+            } else {
+                cumulative_days += 1.0;
+                continue;
             };
             // calculate effective amount of hours
-            // focus_factor
             let focus_factor = match assignment.focus_factor {
                 Some(f) => f,
                 None => worker.focus_factor,
             };
-            let hrs = hrs as f64 * focus_factor;
-            hours_to_burn -= hrs;
-            resource_allocation.add(&worker_name, d, WorkerDay::Fine);
-            if hours_to_burn <= 0.01 {
-                // we have to subtract (hours_to_burn is negative) remaining day
-                // as we progressed too far
-                cumulative_days += hours_to_burn / hrs;
-                // println!("CD={cumulative_days}");
+            let mut effective_working_hrs = working_hrs as f64 * focus_factor;
+            // what if a previous task finished in this day?
+            // we need to adjust currently available hours
+            let left_day = cumulative_days % 1.0;
+            let mut cumulative_day_len = 1.0;
+            if left_day.abs() > 0.001 {
+                // prev task was finished in this day
+                let remaining_fraction = 1.0 - left_day;
+                effective_working_hrs *= remaining_fraction;
+                cumulative_day_len *= remaining_fraction;
+            }
+            let mut task_ends = false;
+
+            // println!("{name} => {hours_to_burn} (cum: {cumulative_days})");
+            if hours_to_burn >= effective_working_hrs {
+                // whole day will be assigned to this task
+                hours_to_burn -= effective_working_hrs;
+                cumulative_days += cumulative_day_len;
+                resource_allocation.add(
+                    &worker_name,
+                    d,
+                    WorkerDay::Fine,
+                    Hours(8.0 * cumulative_day_len),
+                );
+                if hours_to_burn.abs() < 1e-10 {
+                    task_ends = true;
+                }
+            } else {
+                // only a fraction of this day will be assigned to the task
+                // (effectively this task is about to be finished)
+                assert!(effective_working_hrs != 0.0);
+                let fraction = hours_to_burn / effective_working_hrs;
+                assert!(fraction <= 1.0);
+                cumulative_days += cumulative_day_len * fraction;
+                resource_allocation.add(
+                    &worker_name,
+                    d,
+                    WorkerDay::Underloaded,
+                    Hours(8.0 * fraction * cumulative_day_len),
+                );
+                task_ends = true;
+            }
+            if task_ends {
                 end_on = project_begin + Days::new(cumulative_days.ceil() as u64 - 1);
+                // println!("end on: {end_on}");
                 break;
             }
         }
@@ -317,7 +379,18 @@ pub fn process(
             if d > project_end {
                 break;
             }
-            days.entry(d).or_insert(WorkerDay::Unassigned);
+            let d = &mut days.entry(d).or_insert((Hours(0.0), WorkerDay::Unassigned));
+
+            let h = d.0 .0;
+
+            if h >= 8.001 {
+                d.1 = WorkerDay::Overloaded;
+                println!("Overloaded: {h}");
+            } else if h <= 7.999 && h >= 0.001 {
+                d.1 = WorkerDay::Underloaded;
+            } else if h > 7.999 && h < 8.001 {
+                d.1 = WorkerDay::Fine;
+            }
         }
     }
 

@@ -47,6 +47,7 @@ pub struct TimeMarker {
     #[serde(deserialize_with="parse_multidate_entry")]
     pub time: Vec<DateObj>,
     pub label: String,
+    pub color: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -90,7 +90,7 @@ fn generate_plantuml_script(
             let task_name = format!("{worker}_{i}");
             script += &format!("[.] as [{task_name}] starts {d} and requires 1 days\n");
             use gantt_builder::WorkerDay::*;
-            let c = match dtype {
+            let c = match dtype.1 {
                 PubHolidays => &cfg.backend.colors.worker_pub_holidays,
                 Holidays => &cfg.backend.colors.worker_holidays,
                 OtherDuties => &cfg.backend.colors.worker_other_duties,
@@ -123,7 +123,11 @@ fn generate_plantuml_script(
             }
             let label = &tm.label;
             script += &format!("{from} to {to} are named [{label}]\n");
-            let c = &cfg.backend.colors.time_markers;
+            let c = if let Some(ref c) = tm.color {
+                &c
+            } else {
+                &cfg.backend.colors.time_markers
+            };
             script += &format!("{from} to {to} are colored in {c}\n");
         }
     }

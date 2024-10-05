@@ -41,6 +41,6 @@ assignments = [
 ]
 
 time_markers = [
-    {time="2024-12-09", label="Game exhibition"},
+    {time="2024-12-09", label="Game exhibition", color="yellow"},
     {time="2024-12-16:2024-12-25", label="Critical path"}
 ]
