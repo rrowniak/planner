@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/style.css?v=10" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>planner <span>web</span></h1>
+        <p>Turn project estimates into a realistic, calendar-aware timeline.</p>
+      </div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+    </header>
+
+    <main class="layout">
+      <section class="panel editor-panel">
+        <div class="panel-head">
+          <h2>Project definition</h2>
+          <div id="examples" class="examples" aria-label="Examples"></div>
+        </div>
+
+        <div class="editor-body">
+          <div class="editor-tabs" role="tablist" aria-label="Editor mode">
+            <button
+              id="tab-toml"
+              class="tab active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              aria-controls="toml-view"
+            >
+              TOML
+            </button>
+            <button
+              id="tab-definition"
+              class="tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="definition-view"
+            >
+              Definition
+            </button>
+          </div>
+
+          <div id="toml-view" class="editor-view">
+            <textarea
+              id="project-toml"
+              spellcheck="false"
+              aria-label="Project TOML"
+              placeholder="Paste your project definition here..."
+            ></textarea>
+          </div>
+
+          <div id="definition-view" class="editor-view hidden">
+            <div id="definition" class="definition-form"></div>
+            <datalist id="calendar-options"></datalist>
+          </div>
+
+          <div class="calendar-block">
+            <div class="block-head">
+              <h3>Calendars</h3>
+              <span class="muted">Built-in plus any you upload.</span>
+            </div>
+            <div id="calendar-chips" class="chips"></div>
+            <div class="upload-row">
+              <label class="upload">
+                Add calendar .toml
+                <input id="calendar-file" type="file" accept=".toml,text/plain" multiple hidden />
+              </label>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="render" class="primary" type="button">Render chart</button>
+            <span class="hint">Ctrl+Enter</span>
+          </div>
+
+          <div id="messages" class="messages" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="panel chart-panel">
+        <div class="panel-head">
+          <h2>Gantt chart</h2>
+          <span id="chart-meta" class="muted"></span>
+        </div>
+        <div id="chart" class="chart">
+          <div class="empty">Paste a project and press Render.</div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="/static/app.js?v=10"></script>
+  </body>
+</html>
